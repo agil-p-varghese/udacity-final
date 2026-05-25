@@ -1,47 +1,50 @@
 from awsglue.context import GlueContext
 from pyspark.context import SparkContext
-from pyspark.sql.functions import col
+
 # Create contexts
 sc = SparkContext()
 glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 
-# Read trusted datasets
-accelerometer_df = spark.read.json(
-    "s3://agil-final-project/trusted/accelerometer/"
+# Read from Glue Catalog
+step_dyf = glueContext.create_dynamic_frame.from_catalog(
+    database="project-db",
+    table_name="step_trainer_trusted"
 )
 
-step_df = spark.read.json(
-    "s3://agil-final-project/trusted/step_trainer/"
+acc_dyf = glueContext.create_dynamic_frame.from_catalog(
+    database="project-db",
+    table_name="accelerometer_trusted"
 )
-customer_df=spark.read.json(
-    "s3://agil-final-project/trusted/customer/")
-#step-customer
-step_customer=step_df.join(
-    customer_df,
-    step_df["serialNumber"]==customer_df["serialnumber"],
-    "inner"
-    )
-# Join with accelerometer using email and timestamp
-ml_curated = step_customer.join(
-    accelerometer_df,
-    (step_customer["sensorReadingTime"] == accelerometer_df["timestamp"]) &
-    (step_customer["email"]==accelerometer_df["user"]),
+
+# Convert to DataFrames
+step_df = step_dyf.toDF()
+acc_df = acc_dyf.toDF()
+
+# Print schemas
+step_df.printSchema()
+acc_df.printSchema()
+
+# Join datasets
+ml_curated = step_df.join(
+    acc_df,
+    step_df["sensorReadingTime"] ==
+    acc_df["timestamp"],
     "inner"
 ).select(
-    step_customer["sensorReadingTime"],
-    step_customer["serialNumber"],
-    step_customer["distanceFromObject"],
-    accelerometer_df["user"],
-    accelerometer_df["x"],
-    accelerometer_df["y"],
-    accelerometer_df["z"],
-    accelerometer_df["timestamp"]
+    step_df["serialNumber"],
+    step_df["sensorReadingTime"],
+    step_df["distanceFromObject"],
+    acc_df["user"],
+    acc_df["x"],
+    acc_df["y"],
+    acc_df["z"],
+    acc_df["timestamp"]
 )
 
-# Write curated dataset
-ml_curated.write.mode("append").json(
+# Write output
+ml_curated.write.mode("overwrite").json(
     "s3://agil-final-project/curated/ml_curated/"
 )
 
-print("ml_curated_data created successfully")
+print("machine_learning_curated created successfully")
