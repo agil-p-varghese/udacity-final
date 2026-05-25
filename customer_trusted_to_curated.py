@@ -19,7 +19,7 @@ customer_df = spark.read.json(
 # Join using serial number
 customer_curated = customer_df.join(
     acc_df,
-    step_df["user"] == customer_df["email"],
+    acc_df["user"] == customer_df["email"],
     "inner"
 ).select(
     customer_df["birthDay"],
