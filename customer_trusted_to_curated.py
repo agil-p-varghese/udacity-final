@@ -17,8 +17,8 @@ customer_df = spark.read.json(
 )
 
 # Join using serial number
-customer_curated = customer_df.join(
-    acc_df,
+customer_curated = acc_df.join(
+    customer_df,
     acc_df["user"] == customer_df["email"],
     "inner"
 ).select(
@@ -32,7 +32,7 @@ customer_curated = customer_df.join(
     customer_df["shareWithFriendsAsOfDate"],
     customer_df["shareWithPublicAsOfDate"],
     customer_df["shareWithResearchAsOfDate"]
-)
+).distinct()
 
 # Write trusted step trainer data
 customer_curated.write.mode("append").json(
