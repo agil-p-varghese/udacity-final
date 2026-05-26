@@ -27,7 +27,7 @@ step_trainer_trusted = step_df.join(
     step_df["distanceFromObject"]
 )
 
-# Write trusted output
+# Write 
 step_trainer_trusted.write.mode("overwrite").json(
     "s3://agil-final-project/trusted/step_trainer/"
 )
