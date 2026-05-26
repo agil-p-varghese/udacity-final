@@ -11,24 +11,24 @@ step_df = spark.read.json(
     "s3://agil-final-project/landing/step_trainer/"
 )
 
-# Read trusted customer data
+# Read customer curated data
 customer_df = spark.read.json(
-    "s3://agil-final-project/trusted/customer/"
+    "s3://agil-final-project/curated/customer/"
 )
 
-# Join using serial number
+# Join using serialNumber
 step_trainer_trusted = step_df.join(
     customer_df,
     step_df["serialNumber"] == customer_df["serialNumber"],
     "inner"
 ).select(
-    step_df["sensorReadingTime"],
     step_df["serialNumber"],
+    step_df["sensorReadingTime"],
     step_df["distanceFromObject"]
 )
 
-# Write trusted step trainer data
-step_trainer_trusted.write.mode("append").json(
+# Write trusted output
+step_trainer_trusted.write.mode("overwrite").json(
     "s3://agil-final-project/trusted/step_trainer/"
 )
 
