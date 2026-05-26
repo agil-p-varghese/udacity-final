@@ -1,7 +1,7 @@
 from awsglue.context import GlueContext
 from pyspark.context import SparkContext
 
-# Create Spark/Glue contexts
+
 sc = SparkContext()
 glueContext = GlueContext(sc)
 spark = glueContext.spark_session
@@ -32,7 +32,7 @@ ml_curated = step_df.join(
     acc_df["timestamp"]
 )
 
-# Write curated ML data
+
 ml_curated.write.mode("overwrite").json(
     "s3://agil-final-project/curated/ml_curated/"
 )
