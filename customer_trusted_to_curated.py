@@ -1,22 +1,22 @@
 from awsglue.context import GlueContext
 from pyspark.context import SparkContext
 
-# Create contexts
+
 sc = SparkContext()
 glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 
-# Read step trainer landing data
+
 acc_df = spark.read.json(
     "s3://agil-final-project/trusted/accelerometer/"
 )
 
-# Read trusted customer data
+
 customer_df = spark.read.json(
     "s3://agil-final-project/trusted/customer/"
 )
 
-# Join using serial number
+
 customer_curated = acc_df.join(
     customer_df,
     acc_df["user"] == customer_df["email"],
@@ -34,7 +34,7 @@ customer_curated = acc_df.join(
     customer_df["shareWithResearchAsOfDate"]
 ).distinct()
 
-# Write trusted step trainer data
+
 customer_curated.write.mode("append").json(
     "s3://agil-final-project/curated/customer/"
 )
