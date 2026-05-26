@@ -1,35 +1,25 @@
 from awsglue.context import GlueContext
 from pyspark.context import SparkContext
 
-# Create contexts
+# Create Spark/Glue contexts
 sc = SparkContext()
 glueContext = GlueContext(sc)
 spark = glueContext.spark_session
 
-# Read from Glue Catalog
-step_dyf = glueContext.create_dynamic_frame.from_catalog(
-    database="project-db",
-    table_name="step_trainer_trusted"
+# Read trusted step trainer data
+step_df = spark.read.json(
+    "s3://agil-final-project/trusted/step_trainer/"
 )
 
-acc_dyf = glueContext.create_dynamic_frame.from_catalog(
-    database="project-db",
-    table_name="accelerometer_trusted"
+# Read trusted accelerometer data
+acc_df = spark.read.json(
+    "s3://agil-final-project/trusted/accelerometer/"
 )
 
-# Convert to DataFrames
-step_df = step_dyf.toDF()
-acc_df = acc_dyf.toDF()
-
-# Print schemas
-step_df.printSchema()
-acc_df.printSchema()
-
-# Join datasets
+# Inner join on timestamp
 ml_curated = step_df.join(
     acc_df,
-    step_df["sensorReadingTime"] ==
-    acc_df["timestamp"],
+    step_df["sensorReadingTime"] == acc_df["timestamp"],
     "inner"
 ).select(
     step_df["serialNumber"],
@@ -42,7 +32,7 @@ ml_curated = step_df.join(
     acc_df["timestamp"]
 )
 
-# Write output
+# Write curated ML data
 ml_curated.write.mode("overwrite").json(
     "s3://agil-final-project/curated/ml_curated/"
 )
